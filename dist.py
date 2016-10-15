@@ -14,5 +14,31 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import argparse, sys, os, shutil
+
+parser = argparse.ArgumentParser()
+
+parser.add_argument('--name', default='emptyproject-0', dest='name',
+                    help='Name to use in leading directory and package file names.')
+parser.add_argument('--distfile', default=None, dest='distfile',
+                    help='Distribution description file.')
+
+def create_dist(name, distfile):
+    packaging_dir = name
+    if os.path.exists(packaging_dir):
+        print('Packaging dir %s already exists.')
+        sys.exit(1)
+    os.mkdir(packaging_dir)
+    shutil.rmtree(packaging_dir)
+
 if __name__ == '__main__':
-    print('Running')
+    options = parser.parse_args()
+    if options.distfile is None:
+        print('Must specify --distfile.')
+        sys.exit(1)
+    if not shutil.which('git'):
+        print('Git not installed, can not create distribution without it.')
+        sys.exit(1)
+    if not os.path.exists('.git'):
+        print('No .git directory in current directory, can not create distribution.')
+        sys.exit(1)
