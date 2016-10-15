@@ -15,6 +15,7 @@
 # limitations under the License.
 
 import argparse, sys, os, shutil
+import subprocess, tarfile
 
 parser = argparse.ArgumentParser()
 
@@ -29,6 +30,18 @@ def create_dist(name, distfile):
         print('Packaging dir %s already exists.')
         sys.exit(1)
     os.mkdir(packaging_dir)
+    gitdir = os.path.join(packaging_dir, '.git')
+    shutil.copytree('.git', gitdir)
+    subprocess.check_call(['git', 'reset', '--hard'], cwd=packaging_dir)
+    shutil.rmtree(gitdir)
+    try:
+        os.unlink(os.path.join(packaging_dir, '.gitignore'))
+    except Exception:
+        pass
+    tarfname = name + '.tar.xz'
+    tf = tarfile.open(tarfname, 'w:xz')
+    tf.add(packaging_dir, packaging_dir)
+    tf.close()
     shutil.rmtree(packaging_dir)
 
 if __name__ == '__main__':
@@ -42,3 +55,4 @@ if __name__ == '__main__':
     if not os.path.exists('.git'):
         print('No .git directory in current directory, can not create distribution.')
         sys.exit(1)
+    create_dist(options.name, options.distfile)
