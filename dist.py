@@ -30,7 +30,8 @@ def parse_distfile(dfname):
     return Dist(['extra_file'], ['subdir/removeme.txt'], ['./packagingscript.py'])
 
 def create_zip(zipfilename, packaging_dir):
-    zf = zipfile.ZipFile(zipfilename, 'w', compression=zipfile.ZIP_DEFLATED)
+    zf = zipfile.ZipFile(zipfilename, 'w', compression=zipfile.ZIP_DEFLATED,
+                         allowZip64=True)
     zf.write(packaging_dir)
     for root, dirs, files in os.walk(packaging_dir):
         for d in dirs:
@@ -44,7 +45,7 @@ def create_zip(zipfilename, packaging_dir):
 def create_dist(name, distfile):
     packaging_dir = name
     if os.path.exists(packaging_dir):
-        print('Packaging dir %s already exists.')
+        print('Packaging dir %s already exists.' % packaging_dir)
         sys.exit(1)
     os.mkdir(packaging_dir)
     gitdir = os.path.join(packaging_dir, '.git')
