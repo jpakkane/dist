@@ -14,9 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import argparse, sys, os, shutil
+import argparse, sys, os, shutil, json
 import subprocess, tarfile, zipfile
-from collections import namedtuple
 
 parser = argparse.ArgumentParser()
 
@@ -26,8 +25,17 @@ parser.add_argument('--distfile', default=None, dest='distfile',
                     help='Distribution description file.')
 
 def parse_distfile(dfname):
-    Dist = namedtuple('Dist', ['copy', 'delete', 'run'])
-    return Dist(['extra_file'], ['subdir/removeme.txt'], ['./packagingscript.py'])
+    js = json.load(open(dfname, 'r'))
+    for i in ['copy', 'delete', 'run']:
+        if i not in js:
+            js[i] = []
+    if not isinstance(js['copy'], list):
+        sys.exit('Copy item is not a list')
+    if not isinstance(js['delete'], list):
+        sys.exit('Delete item is not a list')
+    if not isinstance(js['run'], list):
+        sys.exit('Run item is not a list.')
+    return js
 
 def create_zip(zipfilename, packaging_dir):
     zf = zipfile.ZipFile(zipfilename, 'w', compression=zipfile.ZIP_DEFLATED,
@@ -57,19 +65,19 @@ def create_dist(name, distfile):
     except Exception:
         pass
     dist_info = parse_distfile(distfile)
-    for c in dist_info.copy:
+    for c in dist_info['copy']:
         ofname = os.path.join(packaging_dir, c)
         if os.path.isfile(c):
             shutil.copy2(c, ofname)
         else:
             shutil.copytree(c, ofname)
-    for d in dist_info.delete:
+    for d in dist_info['delete']:
         dfname = os.path.join(packaging_dir, d)
         if os.path.isfile(dfname):
             os.unlink(dfname)
         else:
             shutil.rmtree(dfname)
-    for script in dist_info.run:
+    for script in dist_info['run']:
         subprocess.check_call([script, packaging_dir])
     tarfname = name + '.tar.xz'
     tf = tarfile.open(tarfname, 'w:xz')

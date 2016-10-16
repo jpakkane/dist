@@ -1,0 +1,12 @@
+{
+  "copy" : [
+    "extra_file"
+  ],
+  "delete" : [
+    "subdir/removeme.txt"
+  ],
+  "run" : [
+    "./packagingscript.py"
+  ]
+}
+
