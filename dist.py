@@ -16,6 +16,7 @@
 
 import argparse, sys, os, shutil, json
 import subprocess, tarfile, zipfile
+import hashlib
 
 parser = argparse.ArgumentParser()
 
@@ -50,6 +51,13 @@ def create_zip(zipfilename, packaging_dir):
             zf.write(fname, fname)
     zf.close()
 
+def create_hash(fname):
+    hashname = fname + '.sha256sum'
+    m = hashlib.sha256()
+    m.update(open(fname, 'rb').read())
+    with open(hashname, 'w') as f:
+        f.write('%s %s\n' % (m.hexdigest(), os.path.split(fname)[-1]))
+
 def create_dist(name, distfile):
     packaging_dir = name
     if os.path.exists(packaging_dir):
@@ -83,8 +91,10 @@ def create_dist(name, distfile):
     tf = tarfile.open(tarfname, 'w:xz')
     tf.add(packaging_dir, packaging_dir)
     tf.close()
+    create_hash(tarfname)
     zipfilename = name + '.zip'
     create_zip(zipfilename, packaging_dir)
+    create_hash(zipfilename)
     # Create checksums here?
     shutil.rmtree(packaging_dir)
 
