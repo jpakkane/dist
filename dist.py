@@ -58,6 +58,22 @@ def create_hash(fname):
     with open(hashname, 'w') as f:
         f.write('%s %s\n' % (m.hexdigest(), os.path.split(fname)[-1]))
 
+def run_dist(dist_info, packaging_dir):
+    for c in dist_info['copy']:
+        ofname = os.path.join(packaging_dir, c)
+        if os.path.isfile(c):
+            shutil.copy2(c, ofname)
+        else:
+            shutil.copytree(c, ofname)
+    for d in dist_info['delete']:
+        dfname = os.path.join(packaging_dir, d)
+        if os.path.isfile(dfname):
+            os.unlink(dfname)
+        else:
+            shutil.rmtree(dfname)
+    for script in dist_info['run']:
+        subprocess.check_call([script, packaging_dir])
+
 def create_dist(name, distfile):
     packaging_dir = name
     if os.path.exists(packaging_dir):
@@ -73,20 +89,7 @@ def create_dist(name, distfile):
     except Exception:
         pass
     dist_info = parse_distfile(distfile)
-    for c in dist_info['copy']:
-        ofname = os.path.join(packaging_dir, c)
-        if os.path.isfile(c):
-            shutil.copy2(c, ofname)
-        else:
-            shutil.copytree(c, ofname)
-    for d in dist_info['delete']:
-        dfname = os.path.join(packaging_dir, d)
-        if os.path.isfile(dfname):
-            os.unlink(dfname)
-        else:
-            shutil.rmtree(dfname)
-    for script in dist_info['run']:
-        subprocess.check_call([script, packaging_dir])
+    run_dist(dist_info, packaging_dir)
     tarfname = name + '.tar.xz'
     tf = tarfile.open(tarfname, 'w:xz')
     tf.add(packaging_dir, packaging_dir)
